@@ -5,6 +5,7 @@ export interface Tournament<T> {
     rounds: () => Iterable<Round<T>>;
     fixtures: () => Iterable<Fixture<T>>;
     games: () => Iterable<Game<T>>;
+    reshuffle: () => Tournament<T>;
 }
 export type RobinItem<T> = T | Symbol;
 export type Game<T> = [T, T];
@@ -12,8 +13,9 @@ export type Fixture<T> = Iterable<Game<T>>;
 export type Round<T> = Iterable<Fixture<T>>;
 
 export type TouranmentOptions = {
-    rematch?: boolean;
-    playSelf?: boolean;
+    rematch: boolean;
+    playSelf: boolean;
+    shuffle: boolean;
 };
 
 const restSymbol = Symbol.for('rest');
@@ -65,7 +67,8 @@ function isSentry<T>(item: RobinItem<T>): item is Symbol {
 function getDefaultTournamentOptions(): TouranmentOptions {
     return {
         rematch: false,
-        playSelf: false
+        playSelf: false,
+        shuffle: true
     };
 }
 
@@ -79,13 +82,13 @@ function reverse<T>(arr: T[]): T[] {
     return result;
 }
 
-export function allPlayAll<T>(options?: TouranmentOptions): TournamentTemplate {
+export function allPlayAll<T>(
+    options?: Partial<TouranmentOptions>
+): TournamentTemplate {
     const calculatedOptions = {
         ...getDefaultTournamentOptions(),
         ...options
     };
-
-    console.log(calculatedOptions);
 
     return {
         create: <T>(arr: T[]) => createTournament(arr, calculatedOptions)
@@ -96,8 +99,8 @@ function createTournament<T>(
     arr: T[],
     options: TouranmentOptions
 ): Tournament<T> {
-    const robinItems: RobinItem<T>[] = shuffle(arr);
-    const { playSelf } = options;
+    const { playSelf, shuffle: shouldShuffle } = options;
+    const robinItems: RobinItem<T>[] = shouldShuffle ? shuffle(arr) : [...arr];
 
     if (playSelf) {
         robinItems.push(selfSymbol);
@@ -112,7 +115,9 @@ function createTournament<T>(
     return {
         rounds: () => getRounds(robinItems, options),
         fixtures: () => getRoundFixtures(robinItems, options),
-        games: () => getRoundGames(robinItems, options)
+        games: () => getRoundGames(robinItems, options),
+        reshuffle: () =>
+            createTournament(shuffle(arr), { ...options, shuffle: true })
     };
 }
 
