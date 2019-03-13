@@ -1,20 +1,31 @@
 {
-  "name": "all-play-all",
-  "version": "0.0.1",
-  "description": "round robin tournament generator",
-  "main": "lib/index.js",
-  "scripts": {
-    "build": "tsc",
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/ItaHeld90/all-play-all.git"
-  },
-  "author": "Itamar Held <itaheld1990@gmail.com>",
-  "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/ItaHeld90/all-play-all/issues"
-  },
-  "homepage": "https://github.com/ItaHeld90/all-play-all#readme"
+    "name": "all-play-all",
+    "version": "0.0.1",
+    "description": "round robin tournament generator",
+    "main": "lib/index.js",
+    "scripts": {
+        "build": "tsc",
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/ItaHeld90/all-play-all.git"
+    },
+    "keywords": [
+      "round-robin",
+      "tournament",
+      "permutation",
+      "es6",
+      "javascript"
+    ],
+    "author": "Itamar Held <itaheld1990@gmail.com>",
+    "license": "MIT",
+    "files": [
+        "lib",
+        "README.md"
+    ],
+    "bugs": {
+        "url": "https://github.com/ItaHeld90/all-play-all/issues"
+    },
+    "homepage": "https://github.com/ItaHeld90/all-play-all#readme"
 }
