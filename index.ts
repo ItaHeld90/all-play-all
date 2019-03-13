@@ -1,5 +1,5 @@
-export interface TournamentTemplate<T> {
-    create: () => Tournament<T>;
+export interface TournamentTemplate {
+    create: <T>(arr: T[]) => Tournament<T>;
 }
 export interface Tournament<T> {
     rounds: () => Iterable<Round<T>>;
@@ -79,10 +79,7 @@ function reverse<T>(arr: T[]): T[] {
     return result;
 }
 
-export function allPlayAll<T>(
-    arr: T[],
-    options?: TouranmentOptions
-): TournamentTemplate<T> {
+export function allPlayAll<T>(options?: TouranmentOptions): TournamentTemplate {
     const calculatedOptions = {
         ...getDefaultTournamentOptions(),
         ...options
@@ -91,7 +88,7 @@ export function allPlayAll<T>(
     console.log(calculatedOptions);
 
     return {
-        create: () => createTournament(arr, calculatedOptions)
+        create: <T>(arr: T[]) => createTournament(arr, calculatedOptions)
     };
 }
 
