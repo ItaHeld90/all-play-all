@@ -15,6 +15,7 @@ export type Round<T> = Iterable<Fixture<T>>;
 export type TouranmentOptions = {
     rematch: boolean;
     playSelf: boolean;
+    chase: boolean;
 };
 
 const restSymbol = Symbol.for('rest');
@@ -85,7 +86,8 @@ function isSentry<T>(item: RobinItem<T>): item is Symbol {
 function getDefaultTournamentOptions(): TouranmentOptions {
     return {
         rematch: false,
-        playSelf: false
+        playSelf: false,
+        chase: false
     };
 }
 
@@ -99,8 +101,9 @@ function reverse<T>(arr: T[]): T[] {
     return result;
 }
 
-function getShiftsOrder(numFixtures: number) {
-    return shuffle(range(1, numFixtures));
+function getShiftsOrder(numFixtures: number, { chase }: TouranmentOptions) {
+    const shifts = range(1, numFixtures);
+    return chase ? shifts : shuffle(range(1, numFixtures));
 }
 
 export function allPlayAll<T>(
@@ -145,12 +148,14 @@ function createTournament<T>(
 
 function* getRounds<T>(
     items: RobinItem<T>[],
-    { rematch }: TouranmentOptions
+    options: TouranmentOptions
 ): Iterable<Round<T>> {
-    yield getRound(items);
+    yield getRound(items, options);
+
+    const { rematch } = options;
 
     if (rematch) {
-        yield getRound(reverse(items));
+        yield getRound(reverse(items), options);
     }
 }
 
@@ -172,12 +177,15 @@ function* getRoundGames<T>(
     }
 }
 
-function getRound<T>(items: RobinItem<T>[]): Round<T> {
+function getRound<T>(
+    items: RobinItem<T>[],
+    options: TouranmentOptions
+): Round<T> {
     return {
         *[Symbol.iterator]() {
             yield getFixture(items);
 
-            const shiftsOrder = getShiftsOrder(items.length - 1);
+            const shiftsOrder = getShiftsOrder(items.length - 1, options);
 
             for (
                 let fixtureIdx = 0;
