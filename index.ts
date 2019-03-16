@@ -15,7 +15,6 @@ export type Round<T> = Iterable<Fixture<T>>;
 export type TouranmentOptions = {
     rematch: boolean;
     playSelf: boolean;
-    shuffle: boolean;
 };
 
 const restSymbol = Symbol.for('rest');
@@ -50,13 +49,32 @@ function last<T>(arr: T[]): T {
     return arr[arr.length - 1];
 }
 
-function shiftRobin<T>(items: T[]): T[] {
+function times<T>(amount: number, fn: (idx: number) => T): T[] {
+    const result: T[] = [];
+
+    for (let idx = 0; idx < amount; idx++) {
+        result.push(fn(idx));
+    }
+
+    return result;
+}
+
+function range(start: number, end: number): number[] {
+    return times(end - start, idx => idx + start);
+}
+
+function shiftRobin<T>(amount: number, items: T[]): T[] {
     const [staticItem, ...movingItems] = items;
 
     return [
         staticItem,
-        last(movingItems),
-        ...movingItems.slice(0, movingItems.length - 1)
+        ...times(
+            movingItems.length,
+            idx =>
+                movingItems[
+                    (movingItems.length - amount + idx) % movingItems.length
+                ]
+        )
     ];
 }
 
@@ -67,8 +85,7 @@ function isSentry<T>(item: RobinItem<T>): item is Symbol {
 function getDefaultTournamentOptions(): TouranmentOptions {
     return {
         rematch: false,
-        playSelf: false,
-        shuffle: true
+        playSelf: false
     };
 }
 
@@ -80,6 +97,10 @@ function reverse<T>(arr: T[]): T[] {
     }
 
     return result;
+}
+
+function getShiftsOrder(numFixtures: number) {
+    return shuffle(range(1, numFixtures));
 }
 
 export function allPlayAll<T>(
@@ -99,8 +120,8 @@ function createTournament<T>(
     arr: T[],
     options: TouranmentOptions
 ): Tournament<T> {
-    const { playSelf, shuffle: shouldShuffle } = options;
-    const robinItems: RobinItem<T>[] = shouldShuffle ? shuffle(arr) : [...arr];
+    const { playSelf } = options;
+    const robinItems: RobinItem<T>[] = shuffle(arr);
 
     if (playSelf) {
         robinItems.push(selfSymbol);
@@ -112,13 +133,14 @@ function createTournament<T>(
         robinItems.push(restSymbol);
     }
 
-    return {
-        rounds: () => getRounds(robinItems, options),
-        fixtures: () => getRoundFixtures(robinItems, options),
-        games: () => getRoundGames(robinItems, options),
-        reshuffle: () =>
-            createTournament(shuffle(arr), { ...options, shuffle: true })
-    };
+    return (function createByRobinItems(robinItems: RobinItem<T>[]) {
+        return {
+            rounds: () => getRounds(robinItems, options),
+            fixtures: () => getRoundFixtures(robinItems, options),
+            games: () => getRoundGames(robinItems, options),
+            reshuffle: () => createByRobinItems(shuffle(robinItems))
+        };
+    })(robinItems);
 }
 
 function* getRounds<T>(
@@ -155,14 +177,15 @@ function getRound<T>(items: RobinItem<T>[]): Round<T> {
         *[Symbol.iterator]() {
             yield getFixture(items);
 
-            let currItems = items;
+            const shiftsOrder = getShiftsOrder(items.length - 1);
 
             for (
-                let fixtureIdx = 1;
-                fixtureIdx < items.length - 1;
+                let fixtureIdx = 0;
+                fixtureIdx < shiftsOrder.length;
                 fixtureIdx++
             ) {
-                currItems = shiftRobin(currItems);
+                const shiftAmount = shiftsOrder[fixtureIdx];
+                const currItems = shiftRobin(shiftAmount, items);
                 yield getFixture(currItems);
             }
         }
