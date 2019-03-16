@@ -1,6 +1,6 @@
 {
     "name": "all-play-all",
-    "version": "0.0.1",
+    "version": "1.0.0",
     "description": "round robin tournament generator",
     "main": "lib/index.js",
     "scripts": {
